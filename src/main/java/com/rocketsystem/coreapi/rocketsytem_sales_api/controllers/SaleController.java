@@ -7,9 +7,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,8 +22,8 @@ import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.SaleProductDto;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.PointSale;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Product;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Sale;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.SaleProduct;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.services.PointSaleService;
-import com.rocketsystem.coreapi.rocketsytem_sales_api.services.ProductService;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.services.SaleService;
 
 @RestController
@@ -29,9 +31,6 @@ import com.rocketsystem.coreapi.rocketsytem_sales_api.services.SaleService;
 public class SaleController {
     @Autowired
     private SaleService saleService;
-
-    @Autowired
-    private ProductService productService;
 
     @Autowired
     private PointSaleService pointSaleService;
@@ -61,7 +60,8 @@ public class SaleController {
             saleDto.setTotal(sale.getTotal());
             saleDto.setDiscount(sale.getDiscount());
             saleDto.setSaleProducts(sale.getSaleProducts().stream()
-                    .map(sp -> new SaleProductDto(sp.getProduct().getProductId(),sp.getProduct().getProductName(),sp.getQuantity()))
+                    .map(sp -> new SaleProductDto(sp.getProduct().getProductId(), sp.getProduct().getProductName(),
+                            sp.getQuantity()))
                     .collect(Collectors.toList()));
             return ResponseEntity.ok(saleDto);
         } else {
@@ -74,10 +74,10 @@ public class SaleController {
         List<Sale> sales = saleService.findAll();
         List<SaleDto> salesDto = new ArrayList<>();
 
-        for(Sale sale: sales){
+        for (Sale sale : sales) {
             SaleDto saleDto = mapToSaleDto(sale);
             salesDto.add(saleDto);
-           
+
         }
         return ResponseEntity.ok(salesDto);
     }
@@ -96,6 +96,44 @@ public class SaleController {
         }
     }
 
+    @PutMapping("/{saleId}")
+    public ResponseEntity<SaleDto> updateSale(
+            @PathVariable Integer saleId,
+            @RequestBody SaleDto updatedSaleDto) {
+
+        // Crear la entidad Sale y asignar el saleId
+        Sale updatedSale = new Sale();
+        updatedSale.setSaleId(saleId);
+
+        // Mapear los SaleProductDto a SaleProduct
+        List<SaleProduct> saleProducts = updatedSaleDto.getSaleProducts().stream()
+                .map(spDto -> new SaleProduct(updatedSale, new Product(spDto.getProductId()), spDto.getQuantity()))
+                .collect(Collectors.toList());
+
+        updatedSale.setSaleProducts(saleProducts);
+
+        // Llamar al servicio para actualizar la venta
+        Optional<Sale> updatedSaleOptional = saleService.update(saleId, updatedSale);
+
+        if (updatedSaleOptional.isPresent()) {
+            SaleDto responseDto = mapToSaleDto(updatedSaleOptional.get());
+            return ResponseEntity.ok(responseDto);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{saleId}")
+    public ResponseEntity<?> deleteSale(@PathVariable Integer saleId) {
+        Optional<Sale> deletedSale = saleService.delete(saleId);
+
+        if (deletedSale.isPresent()) {
+            return ResponseEntity.ok("Venta eliminada exitosamente");
+        } else {
+            return ResponseEntity.notFound().build(); // 404 si no existe
+        }
+    }
+
     private SaleDto mapToSaleDto(Sale sale) {
         SaleDto saleDto = new SaleDto();
         saleDto.setSaleId(sale.getSaleId());
@@ -104,8 +142,8 @@ public class SaleController {
         saleDto.setTotal(sale.getTotal());
         saleDto.setSaleProducts(sale.getSaleProducts().stream()
                 .map(sp -> new SaleProductDto(sp.getProduct().getProductId(),
-                                               sp.getProduct().getProductName(),
-                                               sp.getQuantity()))
+                        sp.getProduct().getProductName(),
+                        sp.getQuantity()))
                 .collect(Collectors.toList()));
         return saleDto;
     }

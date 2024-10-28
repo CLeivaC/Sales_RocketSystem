@@ -41,6 +41,11 @@ public class Stock {
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    // Nuevo método para ajustar la cantidad
+    public void adjustQuantity(int amount) {
+        this.quantity += amount;
+    }
     
     @Override
     public String toString() {

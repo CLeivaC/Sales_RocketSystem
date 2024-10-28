@@ -42,6 +42,12 @@ public class Product {
 
     
 
+    public Product(Integer productId) {
+        this.productId = productId;
+    }
+
+
+
     public Product(String productName, String productDesc, String productImg, Double productPrice, Date createdAt,
             String productVariation) {
         this.productName = productName;

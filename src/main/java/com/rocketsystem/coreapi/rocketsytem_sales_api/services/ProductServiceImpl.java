@@ -35,25 +35,28 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Optional<Product> update(Integer id, Product product) {
+    public Optional<Product> update(Integer id, Product productData) {
         Optional<Product> productOptional = productRepository.findById(id);
-        if(productOptional.isPresent()){
-            Product productDb = productOptional.orElseThrow();
+    
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
             
-            productDb.setProductName(product.getProductName());
-            productDb.setProductDesc(product.getProductDesc());
-            productDb.setProductPrice(product.getProductPrice());
-            productDb.setProductImg(product.getProductImg());
-            productDb.setProductVariation(product.getProductVariation());
-            // Actualizamos el stock del producto
-        if (product.getStock() != null && productDb.getStock() != null) {
-            productDb.getStock().setQuantity(product.getStock().getQuantity());
+            // Actualización de campos
+            product.setProductName(productData.getProductName());
+            product.setProductDesc(productData.getProductDesc());
+            product.setProductImg(productData.getProductImg());
+            product.setProductPrice(productData.getProductPrice());
+            product.setProductVariation(productData.getProductVariation());
+    
+            if (product.getStock() != null) {
+                product.getStock().setQuantity(productData.getStock().getQuantity());
+            }
+    
+            productRepository.save(product);
+            return Optional.of(product);
         }
-
-            return Optional.of(productRepository.save(productDb));
-        }
-
-        return productOptional;
+    
+        return Optional.empty();
     }
 
     @Override

@@ -115,9 +115,9 @@ public class Sale {
         System.out.println("Agregando producto: " + product.getProductId() + " con cantidad: " + quantity);
 
         // Verificar si hay suficiente stock
-        if (product.getStock().getQuantity() < quantity) {
+        /*if (product.getStock().getQuantity() < quantity) {
             throw new IllegalArgumentException("No hay suficiente stock para el producto: " + product.getProductName());
-        }
+        }*/
     
         // Actualizar stock
         product.getStock().setQuantity(product.getStock().getQuantity() - quantity);
