@@ -75,16 +75,9 @@ public class SaleController {
         List<SaleDto> salesDto = new ArrayList<>();
 
         for(Sale sale: sales){
-            SaleDto saleDto = new SaleDto();
-            saleDto.setSaleId(sale.getSaleId());
-            saleDto.setSaleDate(sale.getSaleDate());
-            saleDto.setPaymentMethod(sale.getPayment_method());
-            saleDto.setTotal(sale.getTotal());
-            saleDto.setDiscount(sale.getDiscount());
-            saleDto.setSaleProducts(sale.getSaleProducts().stream()
-                    .map(sp -> new SaleProductDto(sp.getProduct().getProductId(),sp.getProduct().getProductName(),sp.getQuantity()))
-                    .collect(Collectors.toList()));
+            SaleDto saleDto = mapToSaleDto(sale);
             salesDto.add(saleDto);
+           
         }
         return ResponseEntity.ok(salesDto);
     }
@@ -94,47 +87,26 @@ public class SaleController {
             @PathVariable Integer saleId,
             @RequestParam Integer productId,
             @RequestParam Integer quantity) {
-        
-        // Lógica para obtener la venta
-        Optional<Sale> saleOptional = saleService.getSaleById(saleId);
-        if (!saleOptional.isPresent()) {
-            return ResponseEntity.notFound().build(); // 404 si la venta no existe
+        try {
+            Sale sale = saleService.addProductToSale(saleId, productId, quantity);
+            SaleDto responseDto = mapToSaleDto(sale);
+            return ResponseEntity.ok(responseDto);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
         }
-        Sale sale = saleOptional.get();
-    
-        // Lógica para obtener el producto
-        Optional<Product> productOptional = productService.findOne(productId);
-        if (!productOptional.isPresent()) {
-            return ResponseEntity.badRequest().body("Producto no encontrado"); // 400 si el producto no existe
-        }
-        Product product = productOptional.get();
-    
-        // Verifica si el producto ya está en saleProducts
-        boolean productExists = sale.getSaleProducts().stream()
-                .anyMatch(sp -> sp.getProduct().getProductId().equals(productId));
-    
-        if (productExists) {
-            return ResponseEntity.badRequest().body("Producto ya añadido a la venta"); // 400 si el producto ya está en la venta
-        }
-    
-        // Agrega el producto a la venta
-        sale.addProduct(product, quantity); // Método para añadir el producto a la venta
-        saleService.save(sale); // Guardar cambios en la venta
-    
-        // Mapeo de la entidad a SaleDto
-        SaleDto responseDto = new SaleDto();
-        responseDto.setSaleId(sale.getSaleId());
-        responseDto.setSaleDate(sale.getSaleDate());
-        responseDto.setPaymentMethod(sale.getPayment_method());
-        responseDto.setTotal(sale.getTotal());
-    
-        // Mapear los productos de venta
-        List<SaleProductDto> saleProductDtos = sale.getSaleProducts().stream()
-                .map(sp -> new SaleProductDto(sp.getProduct().getProductId(), sp.getProduct().getProductName(), sp.getQuantity()))
-                .collect(Collectors.toList());
-    
-        responseDto.setSaleProducts(saleProductDtos); // Establecer los productos en el DTO
-    
-        return ResponseEntity.ok(responseDto); // Devuelve el SaleDto actualizado
+    }
+
+    private SaleDto mapToSaleDto(Sale sale) {
+        SaleDto saleDto = new SaleDto();
+        saleDto.setSaleId(sale.getSaleId());
+        saleDto.setSaleDate(sale.getSaleDate());
+        saleDto.setPaymentMethod(sale.getPayment_method());
+        saleDto.setTotal(sale.getTotal());
+        saleDto.setSaleProducts(sale.getSaleProducts().stream()
+                .map(sp -> new SaleProductDto(sp.getProduct().getProductId(),
+                                               sp.getProduct().getProductName(),
+                                               sp.getQuantity()))
+                .collect(Collectors.toList()));
+        return saleDto;
     }
 }

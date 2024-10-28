@@ -16,6 +16,9 @@ public class SaleServiceImpl implements SaleService{
       @Autowired
     private SaleRepository saleRepository;
 
+    @Autowired
+    private ProductService productService;
+
     @Override
     public List<Sale> findAll() {
         return (List<Sale>) saleRepository.findAll();
@@ -39,11 +42,22 @@ public class SaleServiceImpl implements SaleService{
     }
 
     @Override
-    public Sale addProductToSale(Integer saleId, Product product, Integer quantity) {
+    public Sale addProductToSale(Integer saleId, Integer productId, Integer quantity) {
         Sale sale = saleRepository.findById(saleId).orElseThrow(() -> new RuntimeException("Sale not found"));
+        Product product = productService.findOne(productId)
+                            .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        boolean productExists = sale.getSaleProducts().stream()
+                .anyMatch(sp -> sp.getProduct().getProductId().equals(productId));
+
+        if (productExists) {
+            throw new RuntimeException("Product already in sale");
+        }
+
         sale.addProduct(product, quantity);
         return saleRepository.save(sale);
     }
+
 
     @Override
     public Optional<Sale> getSaleById(Integer saleId) {

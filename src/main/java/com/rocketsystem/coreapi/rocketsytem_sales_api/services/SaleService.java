@@ -21,6 +21,6 @@ public interface SaleService {
 
     Optional<Sale> delete(Integer id);
 
-    Sale addProductToSale(Integer saleId,Product product, Integer quantity);
+    Sale addProductToSale(Integer saleId,Integer productId, Integer quantity);
 
 }
