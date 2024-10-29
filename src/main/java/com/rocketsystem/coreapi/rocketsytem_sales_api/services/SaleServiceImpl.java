@@ -102,7 +102,6 @@ public class SaleServiceImpl implements SaleService {
             }
 
             // Eliminar la relación de SaleProduct si es necesario
-            // Esto normalmente se maneja automáticamente si hay cascada en la relación
             sale.getSaleProducts().clear(); // Elimina las relaciones de productos
 
             // Eliminar la venta

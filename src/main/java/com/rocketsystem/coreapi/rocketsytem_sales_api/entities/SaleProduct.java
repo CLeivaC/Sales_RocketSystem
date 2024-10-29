@@ -13,13 +13,13 @@ public class SaleProduct implements Serializable {
     private SaleProductId id = new SaleProductId();
 
     @ManyToOne
-    @MapsId("saleId")  // Debe coincidir con el nombre en SaleProductId
+    @MapsId("saleId") 
     @JoinColumn(name = "saleId")
     @JsonBackReference
     private Sale sale;
 
     @ManyToOne
-    @MapsId("productId")  // Debe coincidir con el nombre en SaleProductId
+    @MapsId("productId")  
     @JoinColumn(name = "productId")
     private Product product;
 
