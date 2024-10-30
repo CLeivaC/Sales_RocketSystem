@@ -55,8 +55,23 @@ public class UserController {
         if (result.hasFieldErrors()) {
             return validation(result);
         }
-        userService.save(userDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userDto);
+        User savedUser = userService.save(userDto); // Guarda el usuario
+
+        // Convierte la lista de Role a RoleDto
+        List<RoleDto> roleDtos = savedUser.getRoles().stream()
+                .map(role -> new RoleDto(role.getRoleId(), role.getRoleName()))
+                .collect(Collectors.toList());
+
+        // Crear un UserDto desde el objeto User guardado
+        UserDto createdUserDto = new UserDto(
+                savedUser.getUserId(),
+                savedUser.getUsername(),
+                savedUser.getCreatedAt(),
+                savedUser.getToken(),
+                roleDtos,
+                savedUser.isEnabled());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDto); // Retorna el UserDto creado
     }
 
     @PostMapping("/register")
@@ -65,7 +80,8 @@ public class UserController {
             return validation(result);
         }
 
-        userDto.setAdmin(false); // Establece admin a false si es necesario
+        userDto.setAdmin(false); // Establece admin a false
+        userDto.setSeller(false); // Establece seller a false
         User savedUser = userService.save(userDto); // Guarda el usuario
 
         // Convierte la lista de Role a RoleDto
