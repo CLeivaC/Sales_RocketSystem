@@ -2,16 +2,28 @@ package com.rocketsystem.coreapi.rocketsytem_sales_api.dtos;
 
 import java.util.Date;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
 
 public class ProductDto {
 
-    private Integer productId;
-
+   @NotEmpty
     private String productName;
+
+    @NotEmpty
     private String productDesc;
     private String productImg;
+
+    @NotNull
+    @Min(1)
     private Double productPrice;
+
+    @NotNull
     private Date createdAt = new Date();
+
+
     private String productVariation;
 
      private Integer stock;
@@ -19,9 +31,9 @@ public class ProductDto {
     public ProductDto() {
     }
 
-    public ProductDto(Integer productId, String productName, String productDesc, String productImg, Double productPrice,
+    public ProductDto(String productName, String productDesc, String productImg, Double productPrice,
             Date createdAt, String productVariation, Integer stock) {
-        this.productId = productId;
+       
         this.productName = productName;
         this.productDesc = productDesc;
         this.productImg = productImg;
@@ -31,13 +43,7 @@ public class ProductDto {
         this.stock = stock;
     }
 
-    public Integer getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Integer productId) {
-        this.productId = productId;
-    }
+  
 
     public String getProductName() {
         return productName;

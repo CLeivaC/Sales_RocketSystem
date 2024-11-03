@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Product;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Sale;
@@ -21,16 +22,19 @@ public class SaleServiceImpl implements SaleService {
     @Autowired
     private ProductService productService;
 
+    @Transactional(readOnly = true)
     @Override
     public List<Sale> findAll() {
         return (List<Sale>) saleRepository.findAll();
     }
 
+    @Transactional
     @Override
     public Sale save(Sale sale) {
         return saleRepository.save(sale);
     }
 
+    @Transactional
     @Override
     public Optional<Sale> update(Integer id, Sale updatedSale) {
         Optional<Sale> existingSaleOptional = saleRepository.findById(id);
@@ -87,6 +91,7 @@ public class SaleServiceImpl implements SaleService {
         return Optional.empty();
     }
 
+    @Transactional
     @Override
     public Optional<Sale> delete(Integer id) {
         Optional<Sale> saleOptional = saleRepository.findById(id);
@@ -113,6 +118,7 @@ public class SaleServiceImpl implements SaleService {
         return Optional.empty(); // Si la venta no existe
     }
 
+    @Transactional
     @Override
     public Sale addProductToSale(Integer saleId, Integer productId, Integer quantity) {
         Sale sale = saleRepository.findById(saleId).orElseThrow(() -> new RuntimeException("Sale not found"));
@@ -130,6 +136,7 @@ public class SaleServiceImpl implements SaleService {
         return saleRepository.save(sale);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Optional<Sale> getSaleById(Integer saleId) {
         return saleRepository.findById(saleId);

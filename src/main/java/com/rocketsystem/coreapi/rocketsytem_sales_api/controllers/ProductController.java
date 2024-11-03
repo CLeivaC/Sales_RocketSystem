@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.ProductDto;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Product;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.exceptions.ResourceNotFoundException;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.services.ProductService;
 
 import jakarta.validation.Valid;
@@ -43,58 +44,38 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> view(@PathVariable Integer id) {
-        Optional<Product> productOptional = productService.findOne(id);
-        if (productOptional.isPresent()) {
-            Product p = productOptional.get();
-            ProductDto productDto = new ProductDto();
-            productDto.setProductId(p.getProductId());
-            productDto.setProductName(p.getProductName());
-            productDto.setProductDesc(p.getProductDesc());
-            productDto.setProductImg(p.getProductImg());
-            productDto.setProductPrice(p.getProductPrice());
-            productDto.setCreatedAt(p.getCreatedAt());
-            productDto.setProductVariation(p.getProductVariation());
-            productDto.setStock(p.getStock().getQuantity());
-            return ResponseEntity.ok().body(productDto);
-        }
+    public ResponseEntity<ProductDto> view(@PathVariable Integer id) {
+        Product product = productService.findOne(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
 
-        return ResponseEntity.notFound().build();
+        ProductDto productDto = new ProductDto();
+        productDto.setProductName(product.getProductName());
+        productDto.setProductDesc(product.getProductDesc());
+        productDto.setProductImg(product.getProductImg());
+        productDto.setProductPrice(product.getProductPrice());
+        productDto.setCreatedAt(product.getCreatedAt());
+        productDto.setProductVariation(product.getProductVariation());
+        productDto.setStock(product.getStock().getQuantity());
+
+        return ResponseEntity.ok(productDto);
     }
 
     @PostMapping
-    public ResponseEntity<Product> create(@Valid @RequestBody Product product) {
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.save(product));
+    public ResponseEntity<ProductDto> create(@Valid @RequestBody ProductDto productDto) {
+        ProductDto createdProductDto = productService.save(productDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdProductDto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Integer id, @Valid @RequestBody ProductDto productDto) {
-        Optional<Product> productOptional = productService.findOne(id);
+    public ResponseEntity<ProductDto> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody ProductDto productDto) {
 
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
+        Optional<ProductDto> updatedProductDto = productService.update(id, productDto);
 
-            // Actualizar los campos del producto con los valores del DTO
-            product.setProductName(productDto.getProductName());
-            product.setProductDesc(productDto.getProductDesc());
-            product.setProductImg(productDto.getProductImg());
-            product.setProductPrice(productDto.getProductPrice());
-            product.setProductVariation(productDto.getProductVariation());
-
-            // Actualizar el stock si es necesario
-            if (product.getStock() != null && productDto.getStock() != null) {
-                product.getStock().setQuantity(productDto.getStock());
-            }
-
-            // Guardar y convertir a DTO para devolver en la respuesta
-            Product updatedProduct = productService.save(product);
-            ProductDto updatedProductDto = mapToProductDto(updatedProduct);
-
-            return ResponseEntity.ok(updatedProductDto);
-        }
-
-        return ResponseEntity.notFound().build();
+        return updatedProductDto
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -108,9 +89,8 @@ public class ProductController {
     }
 
     private ProductDto mapToProductDto(Product product) {
-        
+
         ProductDto productDto = new ProductDto();
-        productDto.setProductId(product.getProductId());
         productDto.setProductName(product.getProductName());
         productDto.setProductDesc(product.getProductDesc());
         productDto.setProductImg(product.getProductImg());

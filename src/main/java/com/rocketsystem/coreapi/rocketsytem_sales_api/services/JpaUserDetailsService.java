@@ -36,10 +36,7 @@ public class JpaUserDetailsService implements UserDetailsService {
                 .collect(Collectors.toList());
 
         
-        // Generar y almacenar el token de refresco
-        // String refreshToken = tokenService.generateRefreshToken(user.getUsername());
-        // user.setToken(refreshToken);
-        // userRepository.save(user);  // Guardar el usuario con el nuevo token
+        
 
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getHashedPassword(),
                 user.isEnabled(), true, true, true, authorities);

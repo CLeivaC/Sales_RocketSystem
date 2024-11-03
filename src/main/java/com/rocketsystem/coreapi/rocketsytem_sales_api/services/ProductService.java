@@ -3,6 +3,7 @@ package com.rocketsystem.coreapi.rocketsytem_sales_api.services;
 import java.util.List;
 import java.util.Optional;
 
+import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.ProductDto;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Product;
 
 public interface ProductService {
@@ -11,9 +12,9 @@ public interface ProductService {
 
     Optional<Product> findOne(Integer id);
 
-    Product save(Product product);
+    ProductDto save(ProductDto productDto);
 
-    Optional<Product> update(Integer id, Product product);
+    Optional<ProductDto> update(Integer id, ProductDto productDto);
 
     Optional<Product> delete(Integer id);
 }
