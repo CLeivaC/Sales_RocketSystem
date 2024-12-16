@@ -8,9 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.HttpSession;
+
+import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.PointSale;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Product;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Sale;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.SaleProduct;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.exceptions.ResourceNotFoundException;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.repositories.SaleRepository;
 
 @Service
@@ -31,7 +35,7 @@ public class SaleServiceImpl implements SaleService {
     @Transactional
     @Override
     public Sale save(Sale sale) {
-        return saleRepository.save(sale);
+        return saleRepository.save(sale); // Solo guardar la venta
     }
 
     @Transactional
@@ -86,44 +90,42 @@ public class SaleServiceImpl implements SaleService {
             // Guardar y devolver la venta actualizada
             Sale updatedSavedSale = saleRepository.save(existingSale);
             return Optional.of(updatedSavedSale);
+        } else {
+            throw new ResourceNotFoundException("Venta no encontrada con id:" + id);
         }
 
-        return Optional.empty();
     }
 
     @Transactional
     @Override
     public Optional<Sale> delete(Integer id) {
-        Optional<Sale> saleOptional = saleRepository.findById(id);
+        Sale sale = saleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Venta no encontrada con id: " + id));
 
-        if (saleOptional.isPresent()) {
-            Sale sale = saleOptional.get();
-
-            // Restablecer el stock de los productos
-            for (SaleProduct saleProduct : sale.getSaleProducts()) {
-                Product product = saleProduct.getProduct();
-                int quantity = saleProduct.getQuantity();
-                product.getStock().adjustQuantity(quantity); // Ajustar el stock a la cantidad original
-            }
-
-            // Eliminar la relación de SaleProduct si es necesario
-            sale.getSaleProducts().clear(); // Elimina las relaciones de productos
-
-            // Eliminar la venta
-            saleRepository.deleteById(id);
-
-            return Optional.of(sale); // Devolver la venta eliminada
+        // Restablecer el stock de los productos
+        for (SaleProduct saleProduct : sale.getSaleProducts()) {
+            Product product = saleProduct.getProduct();
+            int quantity = saleProduct.getQuantity();
+            product.getStock().adjustQuantity(quantity); // Ajustar el stock a la cantidad original
         }
 
-        return Optional.empty(); // Si la venta no existe
+        // Eliminar la relación de SaleProduct si es necesario
+        sale.getSaleProducts().clear(); // Elimina las relaciones de productos
+
+        // Eliminar la venta
+        saleRepository.deleteById(id);
+
+        return Optional.of(sale); // Devolver la venta eliminada
     }
 
     @Transactional
     @Override
     public Sale addProductToSale(Integer saleId, Integer productId, Integer quantity) {
-        Sale sale = saleRepository.findById(saleId).orElseThrow(() -> new RuntimeException("Sale not found"));
+        Sale sale = saleRepository.findById(saleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sale not found with id: " + saleId));
+
         Product product = productService.findOne(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: "+productId+" or has been disabled"));
 
         boolean productExists = sale.getSaleProducts().stream()
                 .anyMatch(sp -> sp.getProduct().getProductId().equals(productId));

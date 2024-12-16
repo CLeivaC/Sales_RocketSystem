@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.ProductDto;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Category;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Product;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Stock;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.exceptions.ResourceNotFoundException;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.repositories.ProductRepository;
 
 @Service
@@ -18,11 +20,21 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private CategoryService categoryService;
+
     @Transactional(readOnly = true)
     @Override
     public List<Product> findAll() {
         return (List<Product>) productRepository.findAll();
     }
+
+    
+    @Override
+    public List<Product> findAllDisabled() {
+       return productRepository.findAllDisabled();
+    }
+
 
     @Transactional(readOnly = true)
     @Override
@@ -47,6 +59,12 @@ public class ProductServiceImpl implements ProductService {
             product.setStock(stock);
         }
 
+      // Buscar la categoría usando el categoryId
+    if (productDto.getCategoryId() != null) {
+        Category category = categoryService.findOne(productDto.getCategoryId())
+            .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con id: " + productDto.getCategoryId()));
+        product.setCategory(category);
+    }
         // Guardar el producto en el repositorio
         Product savedProduct = productRepository.save(product);
 
@@ -93,7 +111,6 @@ public class ProductServiceImpl implements ProductService {
         return productOptional;
     }
 
-    // Método de conversión de Product a ProductDto
     private ProductDto convertToDto(Product product) {
         ProductDto dto = new ProductDto();
         dto.setProductName(product.getProductName());
@@ -101,13 +118,17 @@ public class ProductServiceImpl implements ProductService {
         dto.setProductImg(product.getProductImg());
         dto.setProductPrice(product.getProductPrice());
         dto.setProductVariation(product.getProductVariation());
-
+    
         if (product.getStock() != null) {
-            Stock stock = new Stock();
-            stock.setQuantity(product.getStock().getQuantity());
-            dto.setStock(stock.getQuantity());
+            dto.setStock(product.getStock().getQuantity());
         }
-
+    
+        // Aquí se asigna categoryId
+        if (product.getCategory() != null) {
+            dto.setCategoryId(product.getCategory().getCategoryId());
+        }
+        dto.setEnabled(product.getEnabled());
+    
         return dto;
     }
 

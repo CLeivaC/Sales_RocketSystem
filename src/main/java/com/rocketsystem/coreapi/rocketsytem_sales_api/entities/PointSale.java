@@ -7,7 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "pointSales")
+@Table(name = "pointsales")
 public class PointSale {
 
     @Id
@@ -20,6 +20,20 @@ public class PointSale {
 
     public PointSale() {
     }
+
+
+    public PointSale(String pointSaleName) {
+        this.pointSaleName = pointSaleName;
+    }
+
+
+
+
+    public PointSale(Integer pointSaleId) {
+        this.pointSaleId = pointSaleId;
+    }
+
+
 
     public PointSale(String pointSaleName, Boolean isOpen) {
         this.pointSaleName = pointSaleName;

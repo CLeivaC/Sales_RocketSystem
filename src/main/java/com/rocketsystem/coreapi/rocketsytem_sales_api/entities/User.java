@@ -12,16 +12,14 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rocketsystem.coreapi.rocketsytem_sales_api.validation.ExistsByUsername;
+
 
 @Entity
 @Table(name = "users")
@@ -32,14 +30,10 @@ public class User {
     private Integer userId;
 
    
-    @Column(unique = true)
-    //@NotBlank
-    //@Size(min = 4,max = 12)
+    @Column(unique = true) 
     private String username;
 
-    // @NotBlank(message = "Password no puede estar vacío")
-    // @Size(min = 8, message = "Password debe tener al menos 8 caracteres")
-    // @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+   
     private String hashedPassword;
 
 
@@ -50,7 +44,7 @@ public class User {
     @ManyToMany
     @JsonIgnoreProperties({"users","handler","hibernateLazyInitializer"})
     @JoinTable(
-        name = "rolesUsers",
+        name = "rolesusers",
         joinColumns = @JoinColumn(name="userId"),
         inverseJoinColumns = @JoinColumn(name="roleId"),
         uniqueConstraints = {@UniqueConstraint(columnNames = {"userId","roleId"})}

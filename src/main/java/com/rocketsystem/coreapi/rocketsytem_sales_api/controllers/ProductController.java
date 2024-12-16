@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,12 +24,15 @@ import com.rocketsystem.coreapi.rocketsytem_sales_api.services.ProductService;
 
 import jakarta.validation.Valid;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/rocketsystem/products")
 public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+   
 
     @GetMapping
     public List<ProductDto> list() {
@@ -60,6 +64,19 @@ public class ProductController {
         return ResponseEntity.ok(productDto);
     }
 
+    @GetMapping("/disabled")
+    public List<ProductDto> listDisabled() {
+        List<Product> disabledProducts = productService.findAllDisabled();
+        List<ProductDto> productsDto = new ArrayList<>();
+
+        for (Product p : disabledProducts) {
+            ProductDto productDto = mapToProductDto(p);
+            productsDto.add(productDto);
+        }
+
+        return productsDto;
+    }
+
     @PostMapping
     public ResponseEntity<ProductDto> create(@Valid @RequestBody ProductDto productDto) {
         ProductDto createdProductDto = productService.save(productDto);
@@ -89,7 +106,6 @@ public class ProductController {
     }
 
     private ProductDto mapToProductDto(Product product) {
-
         ProductDto productDto = new ProductDto();
         productDto.setProductName(product.getProductName());
         productDto.setProductDesc(product.getProductDesc());
@@ -98,6 +114,12 @@ public class ProductController {
         productDto.setCreatedAt(product.getCreatedAt());
         productDto.setProductVariation(product.getProductVariation());
         productDto.setStock(product.getStock().getQuantity());
+
+        if (product.getCategory() != null) {
+            productDto.setCategoryId(product.getCategory().getCategoryId());
+        }
+
+        productDto.setEnabled(product.getEnabled());
 
         return productDto;
     }

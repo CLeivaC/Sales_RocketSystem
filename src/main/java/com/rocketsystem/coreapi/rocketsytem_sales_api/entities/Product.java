@@ -5,12 +5,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -35,7 +38,15 @@ public class Product {
     private Stock stock;
 
     @OneToMany(mappedBy = "product")
+    @JsonBackReference 
     private List<SaleProduct> saleProducts = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "categoryId", nullable = false)
+    @JsonBackReference 
+    private Category category;
+
+    private Boolean enabled;
 
     public Product() {
     }
@@ -137,7 +148,24 @@ public class Product {
         this.saleProducts = saleProducts;
     }
 
+    public Category getCategory() {
+        return category;
+    }
 
+
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
 
     @Override
     public String toString() {
@@ -145,6 +173,17 @@ public class Product {
                 + ", productImg=" + productImg + ", productPrice=" + productPrice + ", createdAt=" + createdAt
                 + ", productVariation=" + productVariation + ", stock=" + stock + "]";
     }
+
+
+
+
+
+    
+
+
+
+   
+    
 
 
 

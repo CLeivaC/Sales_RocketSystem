@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,12 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.RoleDto;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.UserDto;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.UserUpdateDto;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.User;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.services.UserService;
 
 import jakarta.validation.Valid;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/rocketsystem/users")
 public class UserController {
@@ -50,28 +55,34 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
-    @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody UserDto userDto, BindingResult result) {
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody UserUpdateDto userUpdateDto,
+            BindingResult result) {
         if (result.hasFieldErrors()) {
             return validation(result);
         }
-        User savedUser = userService.save(userDto); // Guarda el usuario
+
+        // Actualiza el usuario
+        User updatedUser = userService.update(id, userUpdateDto);
 
         // Convierte la lista de Role a RoleDto
-        List<RoleDto> roleDtos = savedUser.getRoles().stream()
+        List<RoleDto> roleDtos = updatedUser.getRoles().stream()
                 .map(role -> new RoleDto(role.getRoleId(), role.getRoleName()))
                 .collect(Collectors.toList());
 
-        // Crear un UserDto desde el objeto User guardado
-        UserDto createdUserDto = new UserDto(
-                savedUser.getUserId(),
-                savedUser.getUsername(),
-                savedUser.getCreatedAt(),
-                savedUser.getToken(),
+        // Crear un UserDto desde el objeto User actualizado
+        UserUpdateDto updatedUserDto = new UserUpdateDto(
+                updatedUser.getUserId(),
+                updatedUser.getUsername(),
+                updatedUser.getHashedPassword(),
                 roleDtos,
-                savedUser.isEnabled());
+                updatedUser.isEnabled(),
+                updatedUser.isAdmin(),
+                updatedUser.isSeller());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDto); // Retorna el UserDto creado
+        return ResponseEntity.ok(updatedUserDto); // Retorna el UserDto actualizado
     }
 
     @PostMapping("/register")

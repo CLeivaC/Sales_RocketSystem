@@ -2,6 +2,8 @@ package com.rocketsystem.coreapi.rocketsytem_sales_api.dtos;
 
 import java.util.Date;
 
+import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Category;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -26,7 +28,11 @@ public class ProductDto {
 
     private String productVariation;
 
-     private Integer stock;
+    private Integer stock;
+
+    private Integer categoryId;
+
+    private Boolean enabled;
 
     public ProductDto() {
     }
@@ -100,6 +106,24 @@ public class ProductDto {
     public void setStock(Integer stock) {
         this.stock = stock;
     }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    
 
      
 

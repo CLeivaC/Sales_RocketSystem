@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "salesProducts")
@@ -21,6 +22,7 @@ public class SaleProduct implements Serializable {
     @ManyToOne
     @MapsId("productId")  
     @JoinColumn(name = "productId")
+    @JsonManagedReference
     private Product product;
 
     private Integer quantity;

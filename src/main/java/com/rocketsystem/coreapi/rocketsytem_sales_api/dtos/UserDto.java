@@ -2,12 +2,11 @@ package com.rocketsystem.coreapi.rocketsytem_sales_api.dtos;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale.Category;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Role;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.validation.ExistsByUsername;
 
-import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -17,7 +16,7 @@ public class UserDto {
 
     @ExistsByUsername
     @NotBlank(message = "Username no puede estar vacío")
-    @Size(min = 4,max = 12, message = "Username debe tener al menos 4 caracteres y máximo 12")
+    @Size(min = 4, max = 12, message = "Username debe tener al menos 4 caracteres y máximo 12")
     private String username;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -31,7 +30,7 @@ public class UserDto {
 
     private List<RoleDto> roles;
 
-    private boolean enabled;
+    private Boolean enabled;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private boolean admin;
@@ -43,7 +42,7 @@ public class UserDto {
     }
 
     public UserDto(Integer userId, String username, Date createdAt, String token, List<RoleDto> roles,
-            boolean enabled) {
+            Boolean enabled) {
         this.userId = userId;
         this.username = username;
         this.createdAt = createdAt;
@@ -108,11 +107,11 @@ public class UserDto {
         this.roles = roles;
     }
 
-    public boolean isEnabled() {
+    public Boolean isEnabled() {
         return enabled;
     }
 
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
 

@@ -1,12 +1,15 @@
 package com.rocketsystem.coreapi.rocketsytem_sales_api.controllers;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,13 +22,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.SaleDto;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.SaleProductDto;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.dtos.SuccessResponse;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.PointSale;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Product;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.Sale;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.entities.SaleProduct;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.exceptions.ErrorResponse;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.exceptions.PointSaleNotActivatedException;
+import com.rocketsystem.coreapi.rocketsytem_sales_api.exceptions.ResourceNotFoundException;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.services.PointSaleService;
 import com.rocketsystem.coreapi.rocketsytem_sales_api.services.SaleService;
 
+import jakarta.servlet.http.HttpSession;
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/rocketsystem/sales")
 public class SaleController {
@@ -36,14 +45,25 @@ public class SaleController {
     private PointSaleService pointSaleService;
 
     @PostMapping
-    public ResponseEntity<Sale> createSale(@RequestBody Sale sale, @RequestParam Integer pointSaleId) {
-        Optional<PointSale> optionalPointSale = pointSaleService.findOne(pointSaleId);
+    public ResponseEntity<Sale> createSale(@RequestBody Sale sale, HttpSession session) {
+        // Obtén el ID de la caja seleccionada desde la sesión
+        Integer selectedPointSaleId = (Integer) session.getAttribute("selectedPointSaleId");
+
+        if (selectedPointSaleId == null) {
+            throw new PointSaleNotActivatedException("No point sale activated.");
+        }
+
+        // Verifica si el PointSale existe
+        Optional<PointSale> optionalPointSale = pointSaleService.findOne(selectedPointSaleId);
         if (!optionalPointSale.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
+        // Asocia el PointSale a la venta
         sale.setPointSale(optionalPointSale.get());
-        Sale createdSale = saleService.save(sale);
+
+        // Guarda la venta
+        Sale createdSale = saleService.save(sale); // Sin sesión aquí
         return ResponseEntity.ok(createdSale);
     }
 
@@ -87,13 +107,9 @@ public class SaleController {
             @PathVariable Integer saleId,
             @RequestParam Integer productId,
             @RequestParam Integer quantity) {
-        try {
-            Sale sale = saleService.addProductToSale(saleId, productId, quantity);
-            SaleDto responseDto = mapToSaleDto(sale);
-            return ResponseEntity.ok(responseDto);
-        } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        Sale sale = saleService.addProductToSale(saleId, productId, quantity);
+        SaleDto responseDto = mapToSaleDto(sale);
+        return ResponseEntity.ok(responseDto);
     }
 
     @PutMapping("/{saleId}")
@@ -125,12 +141,16 @@ public class SaleController {
 
     @DeleteMapping("/{saleId}")
     public ResponseEntity<?> deleteSale(@PathVariable Integer saleId) {
-        Optional<Sale> deletedSale = saleService.delete(saleId);
-
-        if (deletedSale.isPresent()) {
-            return ResponseEntity.ok("Venta eliminada exitosamente");
-        } else {
-            return ResponseEntity.notFound().build(); // 404 si no existe
+        try {
+            saleService.delete(saleId);
+            SuccessResponse successResponse = new SuccessResponse(HttpStatus.OK.value(),
+                    "Venta eliminada exitosamente");
+            return ResponseEntity.ok(successResponse); // Devuelve el mensaje en formato JSON
+        } catch (ResourceNotFoundException ex) {
+            // Maneja el caso donde la venta no se encuentra
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Not Found", ex.getMessage(),
+                    LocalDateTime.now());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 

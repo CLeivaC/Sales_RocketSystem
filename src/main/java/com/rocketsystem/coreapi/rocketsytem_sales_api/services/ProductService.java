@@ -10,6 +10,8 @@ public interface ProductService {
 
     List<Product> findAll();
 
+    List<Product> findAllDisabled();
+
     Optional<Product> findOne(Integer id);
 
     ProductDto save(ProductDto productDto);

@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/rocketsystem/auth")
 public class AuthController {
